@@ -52,7 +52,7 @@ test("writes require both session and CSRF token", async () => {
 });
 
 test("admin can save contact details and switch maintenance mode", async () => {
-  const settings = { maintenance: true, email: "hello@example.com", address: "الرياض، المملكة العربية السعودية", mapUrl: "https://maps.app.goo.gl/test", social: { youtube: "https://youtube.com/@test", linkedin: "https://linkedin.com/company/test", instagram: "https://instagram.com/test" } };
+  const settings = { maintenance: true, email: "hello@example.com", phone: "+966 50 123 4567", address: "الرياض، المملكة العربية السعودية", mapUrl: "https://maps.app.goo.gl/test", cursorVideos: [{ url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", title: "تعرف علينا" }, { url: "https://vimeo.com/123456789", title: "فيديو ثان" }], social: { youtube: "https://youtube.com/@test", linkedin: "https://linkedin.com/company/test", instagram: "https://instagram.com/test" } };
   const response = await admin.fetch(request("/api/admin?action=settings", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify(settings) }));
   assert.equal(response.status, 200);
   const visitorPage = await page.fetch(request("/api/page?view=home"));
@@ -60,7 +60,12 @@ test("admin can save contact details and switch maintenance mode", async () => {
   assert.match(await visitorPage.text(), /سنعود/);
   const adminPreview = await page.fetch(request("/api/page?view=home", { headers: { cookie } }));
   assert.equal(adminPreview.status, 200);
-  assert.match(await adminPreview.text(), /hello@example.com/);
+  const previewHtml = await adminPreview.text();
+  assert.match(previewHtml, /hello@example.com/);
+  assert.match(previewHtml, /\+966 50 123 4567/);
+  assert.match(previewHtml, /vimeo.com\/123456789/);
+  assert.match(previewHtml, /id="footer-map"/);
+  assert.doesNotMatch(previewHtml, /id="contact-map"|id="contact-address"|01 \/ الفكرة|07 \/ تواصل معنا/);
 });
 
 test("media upload validates bytes and serves the saved image", async () => {
@@ -119,6 +124,8 @@ test("draft stays private; published project appears on home and has a safe deta
   assert.match(previewHtml, /youtube-nocookie.com\/embed\/dQw4w9WgXcQ/);
   assert.match(previewHtml, /&lt;script&gt;/);
   assert.doesNotMatch(previewHtml, /<script>alert/);
+  assert.match(previewHtml, /<div class="project-hero"><img[^>]+><\/div><section class="project-intro/);
+  assert.doesNotMatch(previewHtml, /project-hero-shade/);
   const openSettings = { maintenance: false, email: "hello@example.com", address: "الرياض", mapUrl: "", social: {} };
   await admin.fetch(request("/api/admin?action=settings", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify(openSettings) }));
   assert.equal((await page.fetch(request(`/api/page?view=work&slug=${encodeURIComponent(project.slug)}`))).status, 404);
@@ -132,7 +139,16 @@ test("draft stays private; published project appears on home and has a safe deta
 test("invalid video and unsafe social links are rejected", () => {
   assert.equal(content.videoEmbedUrl("javascript:alert(1)"), null);
   assert.throws(() => content.normalizeSettings({ social: { instagram: "https://not-instagram.example/test" } }));
+  assert.throws(() => content.normalizeSettings({ phone: "not a phone" }));
+  assert.throws(() => content.normalizeSettings({ cursorVideos: [{ url: "https://example.com/video" }] }));
   assert.throws(() => content.normalizeBlocks([{ type: "video", url: "https://example.com/video" }]));
+});
+
+test("home copy and video controls reflect the requested changes", async () => {
+  const script = await fs.readFile(new URL("../public/src/main.js", import.meta.url), "utf8");
+  assert.doesNotMatch(script, /هل تضمنون نتائج/);
+  assert.match(script, /اسعارنا توصل لربع اسعار منافسينا التقليديين/);
+  assert.match(script, /video-prev/);
 });
 
 test("admin can delete a project", async () => {

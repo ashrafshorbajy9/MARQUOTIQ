@@ -119,14 +119,20 @@ function renderSettings() {
   const form = $("#settings-form");
   const settings = state.settings;
   form.elements.email.value = settings.email || "";
+  form.elements.phone.value = settings.phone || "";
   form.elements.address.value = settings.address || "";
   form.elements.mapUrl.value = settings.mapUrl || "";
   form.elements.youtube.value = settings.social?.youtube || "";
   form.elements.linkedin.value = settings.social?.linkedin || "";
   form.elements.instagram.value = settings.social?.instagram || "";
   form.elements.maintenance.checked = Boolean(settings.maintenance);
+  $("#cursor-video-list").innerHTML = (settings.cursorVideos || []).map(videoRowMarkup).join("");
   $("#site-status").textContent = settings.maintenance ? "وضع التطوير فعّال" : "الموقع مفتوح للزوار";
   $("#site-status").classList.toggle("maintenance-active", Boolean(settings.maintenance));
+}
+
+function videoRowMarkup(video = {}) {
+  return `<div class="settings-video-row"><label>رابط الفيديو<input class="cursor-video-url" type="url" required dir="ltr" placeholder="https://youtube.com/watch?v=..." value="${escapeHtml(video.url || "")}" /></label><label>عنوان الفيديو (اختياري)<input class="cursor-video-title" maxlength="120" placeholder="اسم الفيديو" value="${escapeHtml(video.title || "")}" /></label><div class="settings-video-actions"><button type="button" data-video-up aria-label="تحريك الفيديو للأعلى" title="تحريك للأعلى">↑</button><button type="button" data-video-down aria-label="تحريك الفيديو للأسفل" title="تحريك للأسفل">↓</button><button type="button" class="quiet-danger" data-video-remove aria-label="حذف الفيديو">حذف</button></div></div>`;
 }
 
 async function bootstrap() {
@@ -164,6 +170,19 @@ $("#logout-button").addEventListener("click", async () => {
 
 $("#tab-projects").addEventListener("click", () => selectTab("projects"));
 $("#tab-settings").addEventListener("click", () => selectTab("settings"));
+$("#add-cursor-video").addEventListener("click", () => {
+  const list = $("#cursor-video-list");
+  if (list.children.length >= 12) return toast("يمكن إضافة 12 فيديو كحد أقصى.", true);
+  list.insertAdjacentHTML("beforeend", videoRowMarkup());
+  list.lastElementChild.querySelector("input").focus();
+});
+$("#cursor-video-list").addEventListener("click", (event) => {
+  const row = event.target.closest(".settings-video-row");
+  if (!row) return;
+  if (event.target.closest("[data-video-remove]")) row.remove();
+  if (event.target.closest("[data-video-up]") && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+  if (event.target.closest("[data-video-down]") && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+});
 $("#new-project").addEventListener("click", () => resetProjectEditor());
 $("#project-list").addEventListener("click", (event) => {
   const button = event.target.closest("[data-project-id]");
@@ -259,8 +278,10 @@ $("#settings-form").addEventListener("submit", async (event) => {
   try {
     const { settings } = await api("settings", { method: "POST", body: {
       email: form.elements.email.value,
+      phone: form.elements.phone.value,
       address: form.elements.address.value,
       mapUrl: form.elements.mapUrl.value,
+      cursorVideos: [...document.querySelectorAll(".settings-video-row")].map((row) => ({ url: $(".cursor-video-url", row).value.trim(), title: $(".cursor-video-title", row).value.trim() })),
       social: { youtube: form.elements.youtube.value, linkedin: form.elements.linkedin.value, instagram: form.elements.instagram.value },
       maintenance: form.elements.maintenance.checked,
     } });

@@ -36,8 +36,7 @@ const steps = [
 
 const faqs = [
   ["هل تستخدمون الذكاء الاصطناعي في كل شيء؟", "نستخدم أدوات الذكاء الاصطناعي والأتمتة في مهام مثل البحث والمسودات والتحليل والتقارير. والفريق يراجع المخرجات ويتأكد من مناسبتها قبل اعتمادها أو نشرها."],
-  ["هل تضمنون نتائج أو مبيعات؟", "لا نضمن رقمًا أو نتيجة محددة. نحدد مؤشرات مناسبة معك، ونتابع الأداء ونوضح وش تعلمنا من البيانات."],
-  ["كم أسعار الخدمات؟", "ما عندنا أسعار منشورة للعامة. بعد ما نفهم احتياج نشاطك ونطاق العمل، نشاركك عرضًا واضحًا بالتكلفة والمخرجات."],
+  ["كم أسعار خدماتكم؟", "يفضل التواصل معنا عشان نفهم طلبكم بالتحديد ونعطيكم عرض مناسب، اسعارنا توصل لربع اسعار منافسينا التقليديين."],
   ["هل أقدر أطلب خدمة واحدة؟", "نحدد هذا بعد ما نفهم هدفك ونطاق الخدمة. تواصل معنا وخلّنا نشوف وش الأنسب لنشاطك."],
   ["هل ميزانية الإعلانات ضمن أتعابكم؟", "ميزانية الإعلان منفصلة عن أتعاب إدارة الحملات، وتُوضح في العرض قبل بدء العمل."],
   ["هل الخدمات متاحة لكل الأنشطة؟", "نراجع ملاءمة الخدمة حسب هدف النشاط والبيانات والموارد المتاحة، وبعدها نوضح لك إذا نقدر نخدمك وكيف."],
@@ -48,6 +47,32 @@ const siteData = window.__SITE_DATA__ || { projects: [], settings: {} };
 const projects = siteData.projects || [];
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+
+function videoEmbedUrl(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return null;
+    const host = url.hostname.replace(/^www\./, "");
+    const id = host === "youtu.be" ? url.pathname.slice(1).split("/")[0]
+      : ["youtube.com", "m.youtube.com"].includes(host) ? (url.searchParams.get("v") || url.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1]) : null;
+    if (id && /^[A-Za-z0-9_-]{11}$/.test(id)) return `https://www.youtube-nocookie.com/embed/${id}`;
+    const vimeoId = ["vimeo.com", "player.vimeo.com"].includes(host) ? url.pathname.match(/(?:\/video)?\/(\d+)(?:\/|$)/)?.[1] : null;
+    if (vimeoId) return `https://player.vimeo.com/video/${vimeoId}`;
+  } catch { return null; }
+  return null;
+}
+
+const cursorVideos = (siteData.settings?.cursorVideos || []).map((video) => ({ ...video, embed: videoEmbedUrl(video.url) })).filter((video) => video.embed);
+if (cursorVideos.length) {
+  const section = document.querySelector("#videos");
+  const track = document.querySelector("#video-track");
+  section.hidden = false;
+  track.innerHTML = cursorVideos.map((video, index) => `<div class="video-item"><div class="video-frame"><iframe src="${escapeHtml(video.embed)}" title="${escapeHtml(video.title || `فيديو ماركوتيك ${index + 1}`)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>${video.title ? `<h3>${escapeHtml(video.title)}</h3>` : ""}</div>`).join("");
+  document.querySelector(".video-controls").hidden = cursorVideos.length < 2;
+  const slide = (direction) => track.scrollBy({ left: direction * (track.firstElementChild.getBoundingClientRect().width + 18), behavior: "smooth" });
+  document.querySelector("#video-prev").addEventListener("click", () => slide(1));
+  document.querySelector("#video-next").addEventListener("click", () => slide(-1));
+}
 
 document.querySelector("#service-list").innerHTML = services.map((service, index) => `
   <details class="service-item reveal">
@@ -113,24 +138,25 @@ mobileNav.addEventListener("click", (event) => {
 
 const settings = siteData.settings || {};
 const emailRow = document.querySelector("#contact-email-row");
-const addressRow = document.querySelector("#contact-address-row");
+const phoneRow = document.querySelector("#contact-phone-row");
 if (settings.email) {
   const email = document.querySelector("#contact-email");
   email.textContent = settings.email;
   email.href = `mailto:${settings.email}`;
   emailRow.hidden = false;
 }
-if (settings.address) {
-  document.querySelector("#contact-address").textContent = settings.address;
-  addressRow.hidden = false;
+if (settings.phone) {
+  const phone = document.querySelector("#contact-phone");
+  phone.textContent = settings.phone;
+  phone.href = `tel:${settings.phone.replace(/[^+\d]/g, "")}`;
+  phoneRow.hidden = false;
 }
 if (settings.mapUrl) {
-  const mapLink = document.querySelector("#contact-map");
+  const mapLink = document.querySelector("#footer-map");
   mapLink.href = settings.mapUrl;
   mapLink.hidden = false;
-  addressRow.hidden = false;
 }
-document.querySelector("#contact-pending").hidden = !emailRow.hidden || !addressRow.hidden;
+document.querySelector("#contact-pending").hidden = !emailRow.hidden || !phoneRow.hidden;
 document.querySelectorAll("[data-social]").forEach((link) => {
   const url = settings.social?.[link.dataset.social];
   if (url) { link.href = url; link.hidden = false; }
