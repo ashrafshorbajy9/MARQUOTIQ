@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>إدارة الموقع | ماركوتيك</title>
+  <link rel="icon" href="/assets/MARQUOTIQ_Logo_Files/SVG/02_MARQUOTIQ_Mark-Only.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <link rel="stylesheet" href="/src/admin.css" />
+  <script src="/src/admin.js" defer></script>
+</head>
+<body class="admin-page">
+  <div id="admin-login" class="admin-login" hidden>
+    <div class="login-panel">
+      <img src="/assets/MARQUOTIQ_Logo_Files/SVG/03_MARQUOTIQ_Horizontal-Lockup.svg" alt="ماركوتيك" />
+      <p class="eyebrow">لوحة إدارة الموقع</p>
+      <h1>أهلًا بعودتك.</h1>
+      <form id="login-form">
+        <label>البريد الإلكتروني<input name="email" type="email" autocomplete="username" required /></label>
+        <label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required /></label>
+        <button class="button button-primary" type="submit">دخول <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="admin-feedback" id="login-feedback" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="admin-app" hidden>
+    <header class="admin-header"><div class="admin-header-inner"><a href="/" target="_blank" rel="noopener noreferrer"><img src="/assets/MARQUOTIQ_Logo_Files/SVG/03_MARQUOTIQ_Horizontal-Lockup.svg" alt="ماركوتيك" /></a><span>إدارة الموقع</span><div class="admin-header-actions"><a href="/" target="_blank" rel="noopener noreferrer">معاينة الموقع ↗</a><button type="button" id="logout-button">خروج</button></div></div></header>
+    <main class="admin-main">
+      <div class="admin-top"><div><p class="eyebrow">MARQUOTIQ / CMS</p><h1>محتوى الموقع</h1></div><p id="site-status" class="site-status"></p></div>
+      <div class="admin-tabs" role="tablist" aria-label="أقسام الإدارة"><button type="button" class="active" id="tab-projects" role="tab" aria-selected="true" aria-controls="panel-projects">المشاريع</button><button type="button" id="tab-settings" role="tab" aria-selected="false" aria-controls="panel-settings">بيانات الموقع</button></div>
+
+      <section id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="admin-panel">
+        <div class="project-admin-grid">
+          <aside class="project-sidebar"><div class="sidebar-title"><h2>المشاريع</h2><button type="button" id="new-project" class="icon-command" aria-label="مشروع جديد" title="مشروع جديد">+</button></div><div id="project-list" class="project-admin-list"></div></aside>
+          <div class="editor-workspace"><div class="editor-heading"><div><p class="eyebrow">تحرير العمل</p><h2 id="editor-title">مشروع جديد</h2></div><div class="editor-actions"><a id="preview-project" href="#" target="_blank" rel="noopener noreferrer" hidden>معاينة ↗</a><button type="button" id="delete-project" class="quiet-danger" hidden>حذف</button></div></div>
+            <form id="project-form">
+              <div class="editor-field-row"><label>اسم المشروع <span>*</span><input name="title" maxlength="140" required placeholder="اسم المشروع المعتمد" /></label><label>السنة <span>*</span><input name="year" type="number" min="1900" max="2100" required /></label></div>
+              <div class="editor-field-row"><label>رابط الصفحة<input name="slug" maxlength="90" dir="auto" placeholder="يتولد من اسم المشروع ويمكن تعديله" /></label><label>الترتيب<input name="sortOrder" type="number" min="0" value="0" /></label></div>
+              <div class="cover-editor"><div><label for="cover-file">صورة الغلاف <span>*</span></label><p>JPG أو PNG أو WebP أو AVIF. الحد الأقصى 3.5 MB.</p><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /><input id="cover-url" name="coverUrl" type="hidden" /></div><div class="cover-preview" id="cover-preview"><span>لم تُرفع صورة بعد</span></div></div>
+              <div class="block-editor-head"><div><h3>محتوى صفحة المشروع</h3><p>رتّب القصة بالنصوص والصور والفيديو. استخدم شريط التنسيق داخل النص عند الحاجة.</p></div><div class="add-block"><label for="block-type">إضافة عنصر</label><select id="block-type"><option value="paragraph">فقرة</option><option value="heading">عنوان</option><option value="bulletList">قائمة نقطية</option><option value="orderedList">قائمة مرقمة</option><option value="quote">اقتباس</option><option value="image">صورة</option><option value="video">فيديو</option></select><button type="button" id="add-block" class="icon-command" title="إضافة عنصر" aria-label="إضافة عنصر">+</button></div></div>
+              <div id="block-list" class="block-list"></div>
+              <div class="editor-footer"><label class="publish-choice"><input name="published" type="checkbox" /><span>نشر المشروع على الموقع</span></label><button class="button button-primary" type="submit">حفظ المشروع <span aria-hidden="true">↗</span></button></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" class="admin-panel" hidden>
+        <form id="settings-form" class="settings-form"><div class="settings-intro"><h2>بيانات الموقع</h2><p>تظهر المعلومات المحفوظة في قسم التواصل والتذييل. البريد للعرض فقط؛ لا تُرسل إليه طلبات من الموقع.</p></div>
+          <div class="settings-grid"><label>البريد الإلكتروني<input name="email" type="email" placeholder="hello@example.com" dir="ltr" /></label><label>عنوان الوكالة<textarea name="address" rows="3" placeholder="المدينة، الحي، العنوان"></textarea></label><label>رابط الخريطة<input name="mapUrl" type="url" placeholder="https://maps.app.goo.gl/..." dir="ltr" /></label></div>
+          <h3>روابط التواصل الاجتماعي</h3><div class="settings-grid"><label>YouTube<input name="youtube" type="url" placeholder="https://youtube.com/..." dir="ltr" /></label><label>LinkedIn<input name="linkedin" type="url" placeholder="https://linkedin.com/..." dir="ltr" /></label><label>Instagram<input name="instagram" type="url" placeholder="https://instagram.com/..." dir="ltr" /></label></div>
+          <div class="maintenance-control"><div><h3>وضع التطوير</h3><p>عند تفعيله يرى الزوار صفحة «سنعود قريبًا». ستتمكن أنت من دخول اللوحة ومعاينة الموقع.</p></div><label class="switch"><input name="maintenance" type="checkbox" aria-label="تفعيل وضع التطوير" /><span></span></label></div>
+          <div class="settings-actions"><button class="button button-primary" type="submit">حفظ الإعدادات <span aria-hidden="true">↗</span></button></div>
+        </form>
+      </section>
+    </main>
+  </div>
+  <div id="admin-toast" class="admin-toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
