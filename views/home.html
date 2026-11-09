@@ -36,7 +36,7 @@
     </header>
 
     <main id="main">
-      <section class="hero" aria-labelledby="hero-title">
+      <section class="hero" id="hero" data-home-section="hero" aria-labelledby="hero-title">
         <div class="hero-image" role="img" aria-label="مشهد معماري بألوان هوية ماركوتيك"></div>
         <div class="hero-wash"></div>
         <div class="hero-content wrap">
@@ -51,7 +51,7 @@
         <div class="hero-bottom wrap"><span>الإنسان يراجع. التقنية تسرّع.</span><span class="hero-scroll">اكتشف أكثر <span aria-hidden="true">↓</span></span></div>
       </section>
 
-      <section class="intro-section section-pad" id="about" aria-labelledby="about-title">
+      <section class="intro-section section-pad" id="about" data-home-section="about" aria-labelledby="about-title">
         <div class="wrap intro-grid">
           <div class="intro-main">
             <p class="eyebrow reveal">طريقة أوضح للنمو</p>
@@ -66,12 +66,12 @@
         </div>
       </section>
 
-      <section class="video-section" id="videos" aria-labelledby="videos-title" hidden>
+      <section class="video-section" id="videos" data-home-section="videos" aria-labelledby="videos-title" hidden>
         <div class="wrap video-heading"><div><p class="eyebrow">من ماركوتيك</p><h2 id="videos-title">بالفيديو<span class="pink-dot">.</span></h2></div><div class="video-controls"><button id="video-prev" type="button" aria-label="الفيديو السابق">→</button><button id="video-next" type="button" aria-label="الفيديو التالي">←</button></div></div>
         <div class="video-track" id="video-track" tabindex="0" aria-label="معرض الفيديوهات، قابل للتمرير"></div>
       </section>
 
-      <section class="services-section section-pad" id="services" aria-labelledby="services-title">
+      <section class="services-section section-pad" id="services" data-home-section="services" aria-labelledby="services-title">
         <div class="wrap">
           <div class="section-heading">
             <div><p class="eyebrow reveal">خدمات تسويقية تمشي مع بعض</p><h2 class="reveal" id="services-title">من أول فكرة<br />لين تعرف وش اللي نفع.</h2></div>
@@ -84,7 +84,7 @@
 
       <div class="pattern-rule" aria-hidden="true"></div>
 
-      <section class="process-section section-pad" id="process" aria-labelledby="process-title">
+      <section class="process-section section-pad" id="process" data-home-section="process" aria-labelledby="process-title">
         <div class="process-pattern" aria-hidden="true"></div>
         <div class="wrap process-inner">
           <div class="process-head"><p class="eyebrow reveal">من التحليل إلى التنفيذ</p><h2 class="reveal" id="process-title">شغل واضح<br />من البداية.</h2><p class="reveal">ما نبدأ بقائمة خدمات جاهزة. نبدأ بفهم نشاطك ووش تبي تحقق، وبعدها نتفق على الأولويات والنطاق وطريقة المتابعة.</p></div>
@@ -92,14 +92,14 @@
         </div>
       </section>
 
-      <section class="ai-section section-pad" aria-labelledby="ai-title">
+      <section class="ai-section section-pad" id="ai" data-home-section="ai" aria-labelledby="ai-title">
         <div class="wrap ai-grid">
           <div class="ai-text"><p class="eyebrow reveal">السرعة مع المسؤولية</p><h2 class="reveal" id="ai-title"><span>AI يسرّع.</span><br />فريقنا يضبط.</h2><p class="reveal">نستخدم الأتمتة في البحث والمسودات والتقارير والمهام المتكررة. لكن السياق، تدقيق التفاصيل، وموافقة النشر تبقى بيد الفريق. لأن السرعة مهمة، بس مو على حساب إن شغلك يطلع مناسب لنشاطك.</p></div>
           <div class="ai-visual reveal" aria-hidden="true"><div class="ai-shape ai-shape-a"></div><div class="ai-shape ai-shape-b"></div><span class="ai-visual-label ai-label-top">INTELLIGENCE</span><span class="ai-visual-label ai-label-bottom">HUMAN REVIEW</span></div>
         </div>
       </section>
 
-      <section class="work-section section-pad" id="work" aria-labelledby="work-title">
+      <section class="work-section section-pad" id="work" data-home-section="work" aria-labelledby="work-title">
         <div class="wrap">
           <div class="work-head"><div><p class="eyebrow reveal">من الفكرة إلى التنفيذ</p><h2 class="reveal" id="work-title">أعمالنا<span class="pink-dot">.</span></h2></div><p class="reveal">تعرّف على المشاريع المنشورة وكيف قدّمنا لكل مشروع تجربة تناسب هدفه.</p></div>
           <div class="work-controls"><span>اسحب لاستعراض المشاريع</span><div><button id="work-prev" type="button" aria-label="المشروع السابق">→</button><button id="work-next" type="button" aria-label="المشروع التالي">←</button></div></div>
@@ -107,14 +107,14 @@
         <div class="work-track" id="work-track" tabindex="0" aria-label="معرض الأعمال، قابل للسحب"></div>
       </section>
 
-      <section class="faq-section section-pad" id="faq" aria-labelledby="faq-title">
+      <section class="faq-section section-pad" id="faq" data-home-section="faq" aria-labelledby="faq-title">
         <div class="wrap faq-grid">
           <div class="faq-heading"><p class="eyebrow reveal">إجابات واضحة</p><h2 class="reveal" id="faq-title">على بلاطة<span class="pink-dot">.</span></h2><p class="reveal">هذي أكثر الأسئلة اللي تساعدك تعرف كيف نشتغل قبل ما نبدأ الحديث.</p></div>
           <div class="faq-list" id="faq-list"></div>
         </div>
       </section>
 
-      <section class="contact-section section-pad" id="contact" aria-labelledby="contact-title">
+      <section class="contact-section section-pad" id="contact" data-home-section="contact" aria-labelledby="contact-title">
         <div class="wrap contact-grid">
           <div class="contact-copy"><p class="eyebrow reveal">خلّنا نبدأ</p><h2 class="reveal" id="contact-title">خلّنا نتكلم<br />عن نشاطك.</h2><p class="reveal">راسلنا وشاركنا هدفك والتحدي التسويقي اللي ودك تحله. نبدأ بمحادثة واضحة عن الخطوة المناسبة.</p><div class="contact-note reveal"><span class="note-icon" aria-hidden="true">✳</span><span>لا تحتاج تعرف الخدمة المناسبة الآن. نبدأ بفهم احتياجك أولًا.</span></div></div>
           <div class="contact-details reveal" id="contact-details">

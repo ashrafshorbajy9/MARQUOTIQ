@@ -29,7 +29,7 @@
     <header class="admin-header"><div class="admin-header-inner"><a href="/" target="_blank" rel="noopener noreferrer"><img src="/assets/MARQUOTIQ_Logo_Files/SVG/03_MARQUOTIQ_Horizontal-Lockup.svg" alt="ماركوتيك" /></a><span>إدارة الموقع</span><div class="admin-header-actions"><a href="/" target="_blank" rel="noopener noreferrer">معاينة الموقع ↗</a><button type="button" id="logout-button">خروج</button></div></div></header>
     <main class="admin-main">
       <div class="admin-top"><div><p class="eyebrow">MARQUOTIQ / CMS</p><h1>محتوى الموقع</h1></div><p id="site-status" class="site-status"></p></div>
-      <div class="admin-tabs" role="tablist" aria-label="أقسام الإدارة"><button type="button" class="active" id="tab-projects" role="tab" aria-selected="true" aria-controls="panel-projects">المشاريع</button><button type="button" id="tab-settings" role="tab" aria-selected="false" aria-controls="panel-settings">بيانات الموقع</button></div>
+      <div class="admin-tabs" role="tablist" aria-label="أقسام الإدارة"><button type="button" class="active" id="tab-projects" role="tab" aria-selected="true" aria-controls="panel-projects">المشاريع</button><button type="button" id="tab-home" role="tab" aria-selected="false" aria-controls="panel-home">إعدادات الصفحة الرئيسية</button><button type="button" id="tab-faqs" role="tab" aria-selected="false" aria-controls="panel-faqs">الأسئلة الشائعة</button><button type="button" id="tab-settings" role="tab" aria-selected="false" aria-controls="panel-settings">بيانات الموقع</button></div>
 
       <section id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="admin-panel">
         <div class="project-admin-grid">
@@ -45,6 +45,23 @@
             </form>
           </div>
         </div>
+      </section>
+
+      <section id="panel-home" role="tabpanel" aria-labelledby="tab-home" class="admin-panel" hidden>
+        <form id="home-form" class="content-form">
+          <div class="settings-intro"><h2>إعدادات الصفحة الرئيسية</h2><p>غيّر عنوان أي قسم أو أظهره أو أخفه، ثم استخدم الأسهم لترتيب الأقسام. العنوان الجديد يظهر أيضًا في قائمة الموقع.</p></div>
+          <div id="home-section-list" class="home-section-list"></div>
+          <div class="settings-actions"><button class="button button-primary" type="submit">حفظ الصفحة الرئيسية <span aria-hidden="true">↗</span></button></div>
+        </form>
+      </section>
+
+      <section id="panel-faqs" role="tabpanel" aria-labelledby="tab-faqs" class="admin-panel" hidden>
+        <form id="faqs-form" class="content-form">
+          <div class="content-form-heading"><div class="settings-intro"><h2>الأسئلة الشائعة</h2><p>أضف الأسئلة والإجابات التي تظهر في الصفحة الرئيسية، وعدّل ترتيبها حسب الأولوية.</p></div><button type="button" id="add-faq" class="icon-command" aria-label="إضافة سؤال" title="إضافة سؤال">+</button></div>
+          <div id="faq-admin-list" class="faq-admin-list"></div>
+          <p id="faq-admin-empty" class="list-empty" hidden>لا توجد أسئلة بعد. أضف سؤالًا من زر +.</p>
+          <div class="settings-actions"><button class="button button-primary" type="submit">حفظ الأسئلة <span aria-hidden="true">↗</span></button></div>
+        </form>
       </section>
 
       <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" class="admin-panel" hidden>

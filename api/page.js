@@ -3,7 +3,7 @@ import path from "node:path";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { readSession } from "../lib/auth.js";
-import { escapeHtml } from "../lib/content.js";
+import { escapeHtml, homeSectionMeta } from "../lib/content.js";
 import { renderWorkPage } from "../lib/pages.js";
 import { findProjectBySlug, getSettings, listProjects } from "../lib/repository.js";
 
@@ -36,7 +36,7 @@ async function handle(request) {
   if (view !== "home") return html("<h1>الصفحة غير موجودة</h1>", 404);
   const projects = await listProjects(true);
   const nonce = randomBytes(16).toString("base64");
-  const data = JSON.stringify({ settings, projects: projects.map(({ id, slug, title, year, coverUrl }) => ({ id, slug, title, year, coverUrl })) }).replace(/</g, "\\u003c");
+  const data = JSON.stringify({ settings, homeSectionMeta, projects: projects.map(({ id, slug, title, year, coverUrl }) => ({ id, slug, title, year, coverUrl })) }).replace(/</g, "\\u003c");
   const page = (await template("home.html")).replace("<!-- SITE_DATA -->", `<script nonce="${nonce}">window.__SITE_DATA__=${data}</script>`);
   return html(page, 200, nonce);
 }

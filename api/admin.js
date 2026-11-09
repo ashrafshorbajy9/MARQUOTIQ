@@ -1,5 +1,5 @@
 import { assertMutation, clearSession, createSession, loginKey, readSession, verifyPassword } from "../lib/auth.js";
-import { normalizeProject, normalizeSettings } from "../lib/content.js";
+import { homeSectionMeta, normalizeFaqs, normalizeHomeSections, normalizeProject, normalizeSettings } from "../lib/content.js";
 import { bodyJson, fail, json, notFound } from "../lib/http.js";
 import { clearLoginFailures, deleteProject, findProjectById, getLoginAttempts, getSettings, listProjects, recordLoginFailure, saveProject, saveSettings } from "../lib/repository.js";
 
@@ -27,7 +27,7 @@ async function handle(request) {
   if (!session) return json({ error: "يلزم تسجيل الدخول." }, 401);
 
   if (request.method === "GET" && action === "bootstrap") {
-    return json({ csrf: session.csrf, settings: await getSettings(), projects: await listProjects() });
+    return json({ csrf: session.csrf, settings: await getSettings(), homeSectionMeta, projects: await listProjects() });
   }
 
   if (request.method === "POST" && action === "logout") {
@@ -37,7 +37,21 @@ async function handle(request) {
 
   if (request.method === "POST" && action === "settings") {
     assertMutation(request, session);
-    const settings = normalizeSettings(await bodyJson(request));
+    const settings = { ...await getSettings(), ...normalizeSettings(await bodyJson(request)) };
+    return json({ settings: await saveSettings(settings) });
+  }
+
+  if (request.method === "POST" && action === "home") {
+    assertMutation(request, session);
+    const sections = (await bodyJson(request))?.sections;
+    const settings = { ...await getSettings(), homeSections: normalizeHomeSections(sections) };
+    return json({ settings: await saveSettings(settings) });
+  }
+
+  if (request.method === "POST" && action === "faqs") {
+    assertMutation(request, session);
+    const faqs = (await bodyJson(request))?.faqs;
+    const settings = { ...await getSettings(), faqs: normalizeFaqs(faqs) };
     return json({ settings: await saveSettings(settings) });
   }
 

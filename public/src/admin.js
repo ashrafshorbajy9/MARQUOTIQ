@@ -1,4 +1,4 @@
-const state = { csrf: "", projects: [], settings: {}, editingId: null };
+const state = { csrf: "", projects: [], settings: {}, homeSectionMeta: {}, editingId: null };
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 let toastTimer;
@@ -35,7 +35,7 @@ function showApp() {
 }
 
 function selectTab(name) {
-  for (const tab of ["projects", "settings"]) {
+  for (const tab of ["projects", "home", "faqs", "settings"]) {
     const active = tab === name;
     $(`#tab-${tab}`).classList.toggle("active", active);
     $(`#tab-${tab}`).setAttribute("aria-selected", String(active));
@@ -131,6 +131,28 @@ function renderSettings() {
   $("#site-status").classList.toggle("maintenance-active", Boolean(settings.maintenance));
 }
 
+function homeSectionMarkup(section) {
+  const meta = state.homeSectionMeta[section.id] || {};
+  return `<div class="home-section-row" data-section-id="${escapeHtml(section.id)}"><div class="home-section-order"><button type="button" data-section-up aria-label="تحريك ${escapeHtml(meta.label)} للأعلى" title="تحريك للأعلى">↑</button><button type="button" data-section-down aria-label="تحريك ${escapeHtml(meta.label)} للأسفل" title="تحريك للأسفل">↓</button></div><div class="home-section-fields"><label>عنوان ${escapeHtml(meta.label || section.id)}<input class="home-section-title" maxlength="100" value="${escapeHtml(section.title)}" placeholder="${escapeHtml(meta.heading || "")}" /></label><small>اتركه فارغًا للإبقاء على العنوان الأصلي.</small></div><label class="home-section-visibility"><input type="checkbox" ${section.visible ? "checked" : ""} /><span>إظهار</span></label></div>`;
+}
+
+function renderHomeSettings() {
+  $("#home-section-list").innerHTML = (state.settings.homeSections || []).map(homeSectionMarkup).join("");
+}
+
+function faqRowMarkup(faq = {}) {
+  return `<div class="faq-admin-row"><div class="faq-admin-actions"><button type="button" data-faq-up aria-label="تحريك السؤال للأعلى" title="تحريك للأعلى">↑</button><button type="button" data-faq-down aria-label="تحريك السؤال للأسفل" title="تحريك للأسفل">↓</button><button type="button" class="quiet-danger" data-faq-remove aria-label="حذف السؤال">حذف</button></div><label>السؤال<input class="faq-question" maxlength="200" required value="${escapeHtml(faq.question || "")}" placeholder="اكتب السؤال" /></label><label>الإجابة<textarea class="faq-answer" maxlength="3000" rows="3" required placeholder="اكتب الإجابة">${escapeHtml(faq.answer || "")}</textarea></label></div>`;
+}
+
+function syncFaqEmpty() {
+  $("#faq-admin-empty").hidden = Boolean($("#faq-admin-list").children.length);
+}
+
+function renderFaqs() {
+  $("#faq-admin-list").innerHTML = (state.settings.faqs || []).map(faqRowMarkup).join("");
+  syncFaqEmpty();
+}
+
 function videoRowMarkup(video = {}) {
   return `<div class="settings-video-row"><label>رابط الفيديو<input class="cursor-video-url" type="url" required dir="ltr" placeholder="https://youtube.com/watch?v=..." value="${escapeHtml(video.url || "")}" /></label><label>عنوان الفيديو (اختياري)<input class="cursor-video-title" maxlength="120" placeholder="اسم الفيديو" value="${escapeHtml(video.title || "")}" /></label><div class="settings-video-actions"><button type="button" data-video-up aria-label="تحريك الفيديو للأعلى" title="تحريك للأعلى">↑</button><button type="button" data-video-down aria-label="تحريك الفيديو للأسفل" title="تحريك للأسفل">↓</button><button type="button" class="quiet-danger" data-video-remove aria-label="حذف الفيديو">حذف</button></div></div>`;
 }
@@ -141,8 +163,11 @@ async function bootstrap() {
     state.csrf = data.csrf;
     state.projects = data.projects;
     state.settings = data.settings;
+    state.homeSectionMeta = data.homeSectionMeta;
     showApp();
     renderSettings();
+    renderHomeSettings();
+    renderFaqs();
     resetProjectEditor();
   } catch (error) {
     showLogin();
@@ -169,7 +194,30 @@ $("#logout-button").addEventListener("click", async () => {
 });
 
 $("#tab-projects").addEventListener("click", () => selectTab("projects"));
+$("#tab-home").addEventListener("click", () => selectTab("home"));
+$("#tab-faqs").addEventListener("click", () => selectTab("faqs"));
 $("#tab-settings").addEventListener("click", () => selectTab("settings"));
+$("#home-section-list").addEventListener("click", (event) => {
+  const row = event.target.closest(".home-section-row");
+  if (!row) return;
+  if (event.target.closest("[data-section-up]") && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+  if (event.target.closest("[data-section-down]") && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+});
+$("#add-faq").addEventListener("click", () => {
+  const list = $("#faq-admin-list");
+  if (list.children.length >= 30) return toast("يمكن إضافة 30 سؤالًا كحد أقصى.", true);
+  list.insertAdjacentHTML("beforeend", faqRowMarkup());
+  list.lastElementChild.querySelector("input").focus();
+  syncFaqEmpty();
+});
+$("#faq-admin-list").addEventListener("click", (event) => {
+  const row = event.target.closest(".faq-admin-row");
+  if (!row) return;
+  if (event.target.closest("[data-faq-remove]")) row.remove();
+  if (event.target.closest("[data-faq-up]") && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+  if (event.target.closest("[data-faq-down]") && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+  syncFaqEmpty();
+});
 $("#add-cursor-video").addEventListener("click", () => {
   const list = $("#cursor-video-list");
   if (list.children.length >= 12) return toast("يمكن إضافة 12 فيديو كحد أقصى.", true);
@@ -288,6 +336,34 @@ $("#settings-form").addEventListener("submit", async (event) => {
     state.settings = settings;
     renderSettings();
     toast("حُفظت بيانات الموقع.");
+  } catch (error) { toast(error.message, true); }
+  finally { button.disabled = false; }
+});
+
+$("#home-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector(".settings-actions button");
+  button.disabled = true;
+  try {
+    const sections = [...$("#home-section-list").children].map((row) => ({ id: row.dataset.sectionId, title: $(".home-section-title", row).value.trim(), visible: $(".home-section-visibility input", row).checked }));
+    const { settings } = await api("home", { method: "POST", body: { sections } });
+    state.settings = settings;
+    renderHomeSettings();
+    toast("حُفظت إعدادات الصفحة الرئيسية.");
+  } catch (error) { toast(error.message, true); }
+  finally { button.disabled = false; }
+});
+
+$("#faqs-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector(".settings-actions button");
+  button.disabled = true;
+  try {
+    const faqs = [...$("#faq-admin-list").children].map((row) => ({ question: $(".faq-question", row).value.trim(), answer: $(".faq-answer", row).value.trim() }));
+    const { settings } = await api("faqs", { method: "POST", body: { faqs } });
+    state.settings = settings;
+    renderFaqs();
+    toast("حُفظت الأسئلة الشائعة.");
   } catch (error) { toast(error.message, true); }
   finally { button.disabled = false; }
 });

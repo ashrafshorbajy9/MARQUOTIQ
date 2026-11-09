@@ -68,6 +68,41 @@ test("admin can save contact details and switch maintenance mode", async () => {
   assert.doesNotMatch(previewHtml, /id="contact-map"|id="contact-address"|01 \/ الفكرة|07 \/ تواصل معنا/);
 });
 
+test("admin can reorder, rename, and hide home sections without losing other settings", async () => {
+  const before = await (await admin.fetch(request("/api/admin?action=bootstrap", { headers: { cookie } }))).json();
+  const sections = before.settings.homeSections.map((section) => ({ ...section }));
+  sections.find((section) => section.id === "about").visible = false;
+  sections.find((section) => section.id === "faq").title = "أسئلتك <جاهزة>";
+  sections.splice(sections.findIndex((section) => section.id === "faq"), 1);
+  sections.splice(1, 0, { id: "faq", visible: true, title: "أسئلتك <جاهزة>" });
+  const rejected = await admin.fetch(request("/api/admin?action=home", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ sections: [...sections.slice(0, -1), sections[0]] }) }));
+  assert.equal(rejected.status, 400);
+  const save = await admin.fetch(request("/api/admin?action=home", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ sections }) }));
+  assert.equal(save.status, 200);
+  const settings = (await save.json()).settings;
+  assert.equal(settings.homeSections[1].id, "faq");
+  assert.equal(settings.email, "hello@example.com");
+  const preview = await page.fetch(request("/api/page?view=home", { headers: { cookie } }));
+  const html = await preview.text();
+  assert.match(html, /"homeSections":\[\{"id":"hero"/);
+  assert.match(html, /"title":"أسئلتك \\u003cجاهزة>"/);
+});
+
+test("admin can replace and delete FAQs while preserving home configuration", async () => {
+  const missingCsrf = await admin.fetch(request("/api/admin?action=faqs", { method: "POST", headers: { cookie, "Content-Type": "application/json" }, body: JSON.stringify({ faqs: [] }) }));
+  assert.equal(missingCsrf.status, 403);
+  const invalid = await admin.fetch(request("/api/admin?action=faqs", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ faqs: [{ question: "سؤال", answer: "" }] }) }));
+  assert.equal(invalid.status, 400);
+  const save = await admin.fetch(request("/api/admin?action=faqs", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ faqs: [{ question: "كيف نبدأ؟", answer: "نتحدث عن مشروعك أولًا." }] }) }));
+  assert.equal(save.status, 200);
+  const settings = (await save.json()).settings;
+  assert.deepEqual(settings.faqs, [{ question: "كيف نبدأ؟", answer: "نتحدث عن مشروعك أولًا." }]);
+  assert.equal(settings.homeSections[1].id, "faq");
+  const update = await admin.fetch(request("/api/admin?action=faqs", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify({ faqs: [] }) }));
+  assert.equal(update.status, 200);
+  assert.deepEqual((await update.json()).settings.faqs, []);
+});
+
 test("media upload validates bytes and serves the saved image", async () => {
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/UAAAAABJRU5ErkJggg=", "base64");
   const form = new FormData();
@@ -124,8 +159,11 @@ test("draft stays private; published project appears on home and has a safe deta
   assert.match(previewHtml, /youtube-nocookie.com\/embed\/dQw4w9WgXcQ/);
   assert.match(previewHtml, /&lt;script&gt;/);
   assert.doesNotMatch(previewHtml, /<script>alert/);
-  assert.match(previewHtml, /<div class="project-hero"><img[^>]+><\/div><section class="project-intro/);
-  assert.doesNotMatch(previewHtml, /project-hero-shade/);
+  assert.match(previewHtml, /<main id="project-content"><section class="project-intro[^>]+><h1 id="project-title">مشروع ماركوتيك<\/h1>/);
+  assert.doesNotMatch(previewHtml, /class="project-hero"/);
+  assert.match(previewHtml, /<meta property="og:image"/);
+  assert.doesNotMatch(previewHtml, /href="\/#about"/);
+  assert.match(previewHtml, /href="\/#faq">أسئلتك &lt;جاهزة&gt;<\/a>/);
   const openSettings = { maintenance: false, email: "hello@example.com", address: "الرياض", mapUrl: "", social: {} };
   await admin.fetch(request("/api/admin?action=settings", { method: "POST", headers: { cookie, "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: JSON.stringify(openSettings) }));
   assert.equal((await page.fetch(request(`/api/page?view=work&slug=${encodeURIComponent(project.slug)}`))).status, 404);
@@ -133,6 +171,7 @@ test("draft stays private; published project appears on home and has a safe deta
   assert.equal(publish.status, 200);
   const homeHtml = await (await page.fetch(request("/api/page?view=home"))).text();
   assert.match(homeHtml, /مشروع ماركوتيك/);
+  assert.match(homeHtml, /"faqs":\[\]/);
   assert.equal((await page.fetch(request(`/api/page?view=work&slug=${encodeURIComponent(project.slug)}`))).status, 200);
 });
 
@@ -144,10 +183,12 @@ test("invalid video and unsafe social links are rejected", () => {
   assert.throws(() => content.normalizeBlocks([{ type: "video", url: "https://example.com/video" }]));
 });
 
-test("home copy and video controls reflect the requested changes", async () => {
+test("home script renders managed FAQs and video controls", async () => {
   const script = await fs.readFile(new URL("../public/src/main.js", import.meta.url), "utf8");
+  const defaults = await fs.readFile(new URL("../lib/content.js", import.meta.url), "utf8");
   assert.doesNotMatch(script, /هل تضمنون نتائج/);
-  assert.match(script, /اسعارنا توصل لربع اسعار منافسينا التقليديين/);
+  assert.match(defaults, /اسعارنا توصل لربع اسعار منافسينا التقليديين/);
+  assert.match(script, /settings\.faqs/);
   assert.match(script, /video-prev/);
 });
 

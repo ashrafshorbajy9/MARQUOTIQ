@@ -5,8 +5,8 @@ Arabic-first, one-page agency site with project detail pages and a single-user a
 ## What is included
 
 - `/`: existing one-page site; published projects appear in the draggable portfolio. Admin-managed YouTube/Vimeo videos appear in a horizontal gallery beneath the idea section.
-- `/work/:slug`: project detail with an unobstructed cover image, followed by its title and year, formatted text, uploaded images, and YouTube/Vimeo embeds.
-- `/admin`: one-account login, project drafts/publishing, image upload, social links, email, mobile number, footer map, homepage video gallery, and maintenance toggle.
+- `/work/:slug`: project detail starts with its title and year, followed by formatted text, uploaded images, and YouTube/Vimeo embeds. The cover remains in the homepage portfolio and social preview.
+- `/admin`: one-account login, project drafts/publishing, image upload, homepage section visibility/title/order, editable FAQs, social links, email, mobile number, footer map, homepage video gallery, and maintenance toggle.
 - Maintenance mode: visitors see “سنعود قريبًا”; a logged-in admin can still preview pages.
 - `robots.txt` and `sitemap.xml` reflect maintenance mode and published projects.
 
@@ -33,6 +33,8 @@ The hash command never needs the plaintext password in a source file or command 
 5. Deploy, log in at `/admin`, add the email, mobile number, map and social URLs, then add any approved homepage videos and projects. Publish projects only after reviewing a draft page at `/work/:slug`. The map link appears beneath the footer social icons; the contact section displays only email and mobile number.
 
 Production intentionally refuses to use local filesystem storage when `DATABASE_URL` or Neon Object Storage is missing. Images are limited to 3.5 MB and checked by file signature. YouTube/Vimeo videos are embedded from their links and are not uploaded.
+
+The homepage and FAQ tabs save to the existing JSON site settings record, so no database migration is required. Leaving a section title blank keeps its original styled heading and navigation label. A custom title replaces both the section heading and its header navigation label. The video section appears only when it is enabled and at least one video exists.
 
 Vercel Hobby is for personal, non-commercial use; a commercial agency site needs a suitable paid Vercel plan. Neon Free can be used while its limits meet the project's needs, but review reliability and backups before public launch.
 

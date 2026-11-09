@@ -34,17 +34,9 @@ const steps = [
   ["نتعلم من البيانات", "نراجع المؤشرات المتفق عليها ونناقش الخطوة التالية."],
 ];
 
-const faqs = [
-  ["هل تستخدمون الذكاء الاصطناعي في كل شيء؟", "نستخدم أدوات الذكاء الاصطناعي والأتمتة في مهام مثل البحث والمسودات والتحليل والتقارير. والفريق يراجع المخرجات ويتأكد من مناسبتها قبل اعتمادها أو نشرها."],
-  ["كم أسعار خدماتكم؟", "يفضل التواصل معنا عشان نفهم طلبكم بالتحديد ونعطيكم عرض مناسب، اسعارنا توصل لربع اسعار منافسينا التقليديين."],
-  ["هل أقدر أطلب خدمة واحدة؟", "نحدد هذا بعد ما نفهم هدفك ونطاق الخدمة. تواصل معنا وخلّنا نشوف وش الأنسب لنشاطك."],
-  ["هل ميزانية الإعلانات ضمن أتعابكم؟", "ميزانية الإعلان منفصلة عن أتعاب إدارة الحملات، وتُوضح في العرض قبل بدء العمل."],
-  ["هل الخدمات متاحة لكل الأنشطة؟", "نراجع ملاءمة الخدمة حسب هدف النشاط والبيانات والموارد المتاحة، وبعدها نوضح لك إذا نقدر نخدمك وكيف."],
-  ["متى تظهر النتائج؟", "ما فيه مدة واحدة تناسب كل الأنشطة. الوقت يعتمد على القناة، المنافسة، الميزانية، جاهزية الموقع والبيانات، وطبيعة الهدف. نحدد توقعات واقعية بعد مراجعة وضعك."],
-];
-
 const siteData = window.__SITE_DATA__ || { projects: [], settings: {} };
 const projects = siteData.projects || [];
+const settings = siteData.settings || {};
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 
@@ -74,6 +66,42 @@ if (cursorVideos.length) {
   document.querySelector("#video-next").addEventListener("click", () => slide(-1));
 }
 
+const sections = settings.homeSections || [];
+const sectionMeta = siteData.homeSectionMeta || {};
+const main = document.querySelector("#main");
+const processRule = document.querySelector(".pattern-rule");
+for (const section of sections) {
+  const element = document.querySelector(`[data-home-section="${section.id}"]`);
+  if (!element) continue;
+  if (section.id === "process") main.appendChild(processRule);
+  main.appendChild(element);
+  element.hidden = !section.visible || (section.id === "videos" && !cursorVideos.length);
+  if (section.title) element.querySelector("h1, h2").textContent = section.title;
+}
+processRule.hidden = document.querySelector("#process").hidden;
+
+const navigationSections = sections.filter((section) => !["hero", "contact"].includes(section.id) && !document.querySelector(`#${section.id}`)?.hidden);
+for (const nav of document.querySelectorAll(".desktop-nav, .mobile-nav")) {
+  nav.replaceChildren();
+  for (const section of navigationSections) {
+    const link = document.createElement("a");
+    link.href = `#${section.id}`;
+    link.textContent = section.title || sectionMeta[section.id]?.label || section.id;
+    link.title = link.textContent;
+    nav.appendChild(link);
+  }
+  if (nav.classList.contains("mobile-nav") && !document.querySelector("#contact").hidden) {
+    const link = document.createElement("a");
+    link.href = "#contact";
+    link.textContent = sections.find((section) => section.id === "contact")?.title || sectionMeta.contact?.label || "تواصل معنا";
+    nav.appendChild(link);
+  }
+}
+const contactSection = sections.find((section) => section.id === "contact");
+if (contactSection?.title) document.querySelector(".header-cta").firstChild.textContent = `${contactSection.title} `;
+document.querySelector(".header-cta").hidden = document.querySelector("#contact").hidden;
+document.querySelector(".header-cta").title = contactSection?.title || sectionMeta.contact?.label || "تواصل معنا";
+
 document.querySelector("#service-list").innerHTML = services.map((service, index) => `
   <details class="service-item reveal">
     <summary><span class="service-icon">${serviceIcon(index)}</span><span class="service-copy"><span class="service-title">${escapeHtml(service.title)}</span><span class="service-short">${String(index + 1).padStart(2, "0")} / ${escapeHtml(service.short)}</span></span><span class="service-toggle" aria-hidden="true">+</span></summary>
@@ -83,8 +111,13 @@ document.querySelector("#service-list").innerHTML = services.map((service, index
 document.querySelector("#process-steps").innerHTML = steps.map(([title, description], index) => `
   <div class="process-step reveal"><span class="step-number">${String(index + 1).padStart(2, "0")}</span><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(description)}</p></div></div>`).join("");
 
-document.querySelector("#faq-list").innerHTML = faqs.map(([question, answer], index) => `
+document.querySelector("#faq-list").innerHTML = (settings.faqs || []).map(({ question, answer }, index) => `
   <details class="faq-item reveal" ${index === 0 ? "open" : ""}><summary><span>${escapeHtml(question)}</span><span aria-hidden="true">+</span></summary><p>${escapeHtml(answer)}</p></details>`).join("");
+
+document.querySelectorAll('a[href^="#"]').forEach((link) => {
+  const target = document.querySelector(link.getAttribute("href"));
+  if (target?.matches("[data-home-section]") && target.hidden) link.hidden = true;
+});
 
 const workTrack = document.querySelector("#work-track");
 workTrack.innerHTML = projects.length ? projects.map((project, index) => `
@@ -136,7 +169,6 @@ mobileNav.addEventListener("click", (event) => {
   }
 });
 
-const settings = siteData.settings || {};
 const emailRow = document.querySelector("#contact-email-row");
 const phoneRow = document.querySelector("#contact-phone-row");
 if (settings.email) {
